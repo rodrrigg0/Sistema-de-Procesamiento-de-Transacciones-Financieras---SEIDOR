@@ -34,7 +34,7 @@ public class Cliente {
 	@Column(name = "fecha_alta", nullable = false, updatable = false)
 	private LocalDate fechaAlta;
 	
-	@OneToMany(mappedBy = "clienteId")
+	@OneToMany(mappedBy = "cliente")
 	private List<Cuenta> cuentas;
 	
 	@PrePersist
