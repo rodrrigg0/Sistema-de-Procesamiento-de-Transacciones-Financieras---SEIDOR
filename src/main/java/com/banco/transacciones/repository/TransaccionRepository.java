@@ -9,8 +9,6 @@ import java.time.Instant;
 import java.util.List;
 import com.banco.transacciones.model.enums.EstadoTransaccion;
 
-
-
 @Repository
 public interface TransaccionRepository extends JpaRepository<Transaccion, Long>{
 	List<Transaccion> findByCuentaOrigen(String cuentaOrigen);
