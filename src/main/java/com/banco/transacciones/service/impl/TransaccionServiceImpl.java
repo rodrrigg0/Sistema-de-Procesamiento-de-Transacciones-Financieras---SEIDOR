@@ -58,7 +58,7 @@ public class TransaccionServiceImpl implements TransaccionService {
                         "Cuenta origen no encontrada: " + request.getCuentaOrigen()));
 
         // PASO 2 — Comprobar que la cuenta origen está activa
-        if (cuentaOrigen.getEstado() != EstadoCuenta.ACTIVA) {
+        if (cuentaOrigen.getEstadocuenta() != EstadoCuenta.ACTIVA) {
             throw new CuentaBloqueadaException(
                     "La cuenta origen está bloqueada o cerrada: " + request.getCuentaOrigen());
         }
