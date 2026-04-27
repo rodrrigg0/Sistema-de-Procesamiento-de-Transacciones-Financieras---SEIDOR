@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 
+@CuentasDistintas
 public class TransferenciaRequest {
 
     @NotBlank(message = "La cuenta origen es obligatoria")
