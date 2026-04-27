@@ -48,6 +48,12 @@ public class Cuenta {
 	@JoinColumn(name= "cliente_id", insertable = false, updatable = false)
 	private Cliente cliente;
 	
+	@Column(name = "pais_habitual", length = 3)
+	private String paisHabitual;
+	
+	@Column(name = "score_riesgo", precision = 5, scale = 4)
+	private BigDecimal scoreRiesgo;
+	
 	@OneToMany(mappedBy = "cuentaOrigen")
 	private List<Transaccion> transacciones;
 	
