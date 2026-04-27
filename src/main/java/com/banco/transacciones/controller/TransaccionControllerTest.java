@@ -84,7 +84,7 @@ class TransaccionControllerTest {
     }
 
     @Test
-    void procesarTransferencia_devuelve202_cuandoTodoEsCorrecto() throws Exception {
+    void procesarTransferenciaDevuelve202CuandoTodoEsCorrecto() throws Exception {
         Map<String, Object> request = Map.of(
                 CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
                 CUENTA_DESTINO_KEY, CUENTA_DESTINO_IBAN,
@@ -99,7 +99,7 @@ class TransaccionControllerTest {
     }
 
     @Test
-    void procesarTransferencia_devuelve400_cuandoSaldoInsuficiente() throws Exception {
+    void procesarTransferenciaDevuelve400CuandoSaldoInsuficiente() throws Exception {
         Map<String, Object> request = Map.of(
                 CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
                 CUENTA_DESTINO_KEY, CUENTA_DESTINO_IBAN,
@@ -114,7 +114,7 @@ class TransaccionControllerTest {
     }
 
     @Test
-    void procesarTransferencia_devuelve400_cuandoCuentasIguales() throws Exception {
+    void procesarTransferenciaDevuelve400CuandoCuentasIguales() throws Exception {
         Map<String, Object> request = Map.of(
                 CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
                 CUENTA_DESTINO_KEY, CUENTA_ORIGEN_IBAN,
