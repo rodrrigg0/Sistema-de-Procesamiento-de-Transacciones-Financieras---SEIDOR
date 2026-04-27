@@ -37,11 +37,9 @@ public class CicloTransaccionDetector {
         Set<String> enPila = new HashSet<>();
 
         for (String cuenta : grafo.keySet()) {
-            if (!visitados.contains(cuenta)) {
-                if (dfsTieneCiclo(grafo, cuenta, visitados, enPila)) {
-                    log.warn("Ciclo detectado en las transacciones del ultimo dia");
-                    return true;
-                }
+            if (!visitados.contains(cuenta) && dfsTieneCiclo(grafo, cuenta, visitados, enPila)) {
+                log.warn("Ciclo detectado en las transacciones del ultimo dia");
+                return true;
             }
         }
 
