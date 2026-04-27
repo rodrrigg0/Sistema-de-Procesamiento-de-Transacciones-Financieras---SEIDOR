@@ -24,6 +24,6 @@ public interface CuentaRepository extends JpaRepository<Cuenta, Long> {
 	 Optional<Cuenta> findByNumeroCuentaWithLock(@Param("numeroCuenta") String numeroCuenta);
 	
 	List<Cuenta> findByClienteId(Long clienteId);
-	List<Cuenta> findByEstado(EstadoCuenta estado);
+	List<Cuenta> findByEstadoCuenta(EstadoCuenta estadoCuenta);
 	boolean existsByNumeroCuenta(String numeroCuenta);
 }

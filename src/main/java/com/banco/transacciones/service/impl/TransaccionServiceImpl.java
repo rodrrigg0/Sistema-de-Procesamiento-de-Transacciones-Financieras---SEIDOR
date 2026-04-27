@@ -45,7 +45,6 @@ public class TransaccionServiceImpl implements TransaccionService {
     private final FraudeScoreCalculator fraudeScoreCalculator;
     
     @Override
-    @Async("transaccionExecutor")
     @Transactional
     public SeguimientoResponse procesarTransferencia(TransferenciaRequest request) {
         MDC.put("correlationId", UUID.randomUUID().toString());
@@ -61,7 +60,7 @@ public class TransaccionServiceImpl implements TransaccionService {
                         "Cuenta origen no encontrada: " + request.getCuentaOrigen()));
 
         // PASO 2 — Comprobar que la cuenta origen está activa
-        if (cuentaOrigen.getEstadocuenta() != EstadoCuenta.ACTIVA) {
+        if (cuentaOrigen.getEstadoCuenta() != EstadoCuenta.ACTIVA) {
             throw new CuentaBloqueadaException(
                     "La cuenta origen está bloqueada o cerrada: " + request.getCuentaOrigen());
         }

@@ -38,11 +38,14 @@ public class Cuenta {
 	
 	@Enumerated(EnumType.STRING)
 	@Column(name = "tipo_cuenta", nullable = false)
-	private TipoCuenta tipocuenta;
+	private TipoCuenta tipoCuenta;
 	
 	@Enumerated(EnumType.STRING)
 	@Column(name = "estado", nullable = false)
-	private EstadoCuenta estadocuenta;
+	private EstadoCuenta estadoCuenta;
+	
+	@Column(name = "cliente_id", nullable = false)
+	private Long clienteId;
 	
 	@ManyToOne
 	@JoinColumn(name= "cliente_id", insertable = false, updatable = false)
