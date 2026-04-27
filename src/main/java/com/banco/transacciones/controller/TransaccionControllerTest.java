@@ -32,6 +32,9 @@ class TransaccionControllerTest {
     private static final String CUENTA_DESTINO_IBAN = "ES9876543210987654321098";
     private static final String CUENTA_ORIGEN_KEY = "cuentaOrigen";
     private static final String CUENTA_DESTINO_KEY = "cuentaDestino";
+    private static final String MONTO_KEY = "monto";
+    private static final String DESCRIPCION_KEY = "descripcion";
+    private static final String URL_TRANSFERENCIA = "/api/transacciones/transferencia";
 
     private final MockMvc mockMvc;
     private final CuentaRepository cuentaRepository;
@@ -88,11 +91,11 @@ class TransaccionControllerTest {
         Map<String, Object> request = Map.of(
                 CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
                 CUENTA_DESTINO_KEY, CUENTA_DESTINO_IBAN,
-                "monto", 100.00,
-                "descripcion", "Test transferencia"
+                MONTO_KEY, 100.00,
+                DESCRIPCION_KEY, "Test transferencia"
         );
 
-        mockMvc.perform(post("/api/transacciones/transferencia")
+        mockMvc.perform(post(URL_TRANSFERENCIA)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isAccepted());
@@ -103,11 +106,11 @@ class TransaccionControllerTest {
         Map<String, Object> request = Map.of(
                 CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
                 CUENTA_DESTINO_KEY, CUENTA_DESTINO_IBAN,
-                "monto", 9999.00,
-                "descripcion", "Test saldo insuficiente"
+                MONTO_KEY, 9999.00,
+                DESCRIPCION_KEY, "Test saldo insuficiente"
         );
 
-        mockMvc.perform(post("/api/transacciones/transferencia")
+        mockMvc.perform(post(URL_TRANSFERENCIA)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -118,11 +121,11 @@ class TransaccionControllerTest {
         Map<String, Object> request = Map.of(
                 CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
                 CUENTA_DESTINO_KEY, CUENTA_ORIGEN_IBAN,
-                "monto", 100.00,
-                "descripcion", "Test cuentas iguales"
+                MONTO_KEY, 100.00,
+                DESCRIPCION_KEY, "Test cuentas iguales"
         );
 
-        mockMvc.perform(post("/api/transacciones/transferencia")
+        mockMvc.perform(post(URL_TRANSFERENCIA)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
