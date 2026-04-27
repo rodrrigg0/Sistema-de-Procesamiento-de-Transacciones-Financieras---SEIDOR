@@ -18,36 +18,45 @@ import com.banco.transacciones.repository.CuentaRepository;
 import com.banco.transacciones.repository.TransaccionRepository;
 import com.banco.transacciones.service.TransaccionService;
 import com.banco.transacciones.util.FraudeScoreCalculator;
-
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TransaccionServiceImpl implements TransaccionService {
+
+    private static final int TAMANO_SUBLOTE = 50;
+    private static final double UMBRAL_FRAUDE = 0.75;
+    private static final String CORRELATION_ID = "correlationId";
 
     private final CuentaRepository cuentaRepository;
     private final TransaccionRepository transaccionRepository;
     private final TransaccionMapper transaccionMapper;
-
-    private static final int TAMANO_SUBLOTE = 50;
-    private static final double UMBRAL_FRAUDE = 0.75;
     private final FraudeScoreCalculator fraudeScoreCalculator;
-    
+    private final TransaccionService self;
+
+    public TransaccionServiceImpl(CuentaRepository cuentaRepository,
+                                   TransaccionRepository transaccionRepository,
+                                   TransaccionMapper transaccionMapper,
+                                   FraudeScoreCalculator fraudeScoreCalculator,
+                                   @Lazy TransaccionService self) {
+        this.cuentaRepository = cuentaRepository;
+        this.transaccionRepository = transaccionRepository;
+        this.transaccionMapper = transaccionMapper;
+        this.fraudeScoreCalculator = fraudeScoreCalculator;
+        this.self = self;
+    }
+
     @Override
     @Transactional
     public SeguimientoResponse procesarTransferencia(TransferenciaRequest request) {
-        MDC.put("correlationId", UUID.randomUUID().toString());
+        MDC.put(CORRELATION_ID, UUID.randomUUID().toString());
         log.info("Iniciando transferencia de {} a {} por {}€",
                 request.getCuentaOrigen(),
                 request.getCuentaDestino(),
@@ -90,7 +99,7 @@ public class TransaccionServiceImpl implements TransaccionService {
 
         log.debug("Transaccion creada con id: {}", transaccionGuardada.getId());
 
-        // PASO 6 — Calcular score de fraude 
+        // PASO 6 — Calcular score de fraude
         double scoreFraude = fraudeScoreCalculator.calcularScore(transaccionGuardada);
 
         // PASO 7 — Si el score supera 0.75 bloquear la transacción
@@ -127,7 +136,7 @@ public class TransaccionServiceImpl implements TransaccionService {
     @Override
     @Transactional(readOnly = true)
     public TransaccionResponse consultarEstado(Long id) {
-        MDC.put("correlationId", UUID.randomUUID().toString());
+        MDC.put(CORRELATION_ID, UUID.randomUUID().toString());
         log.info("Consultando estado de transaccion con id: {}", id);
 
         Transaccion transaccion = transaccionRepository.findById(id)
@@ -141,11 +150,10 @@ public class TransaccionServiceImpl implements TransaccionService {
     @Override
     @Transactional
     public LoteResultadoResponse procesarLote(LoteTransaccionRequest request) {
-        MDC.put("correlationId", UUID.randomUUID().toString());
+        MDC.put(CORRELATION_ID, UUID.randomUUID().toString());
         log.info("Iniciando procesamiento de lote con {} transacciones",
                 request.getTransacciones().size());
 
-        // Partir el lote en sublotes de 50
         List<List<TransferenciaRequest>> sublotes = partirEnSublotes(
                 request.getTransacciones(), TAMANO_SUBLOTE);
 
@@ -153,12 +161,11 @@ public class TransaccionServiceImpl implements TransaccionService {
         int totalProcesadas = 0;
         int totalRechazadas = 0;
 
-        // Procesar cada sublote
         for (List<TransferenciaRequest> sublote : sublotes) {
             log.debug("Procesando sublote de {} transacciones", sublote.size());
             for (TransferenciaRequest transferencia : sublote) {
                 try {
-                    SeguimientoResponse seguimiento = procesarTransferencia(transferencia);
+                    SeguimientoResponse seguimiento = self.procesarTransferencia(transferencia);
                     if (seguimiento.estado() == EstadoTransaccion.COMPLETADA) {
                         totalProcesadas++;
                     } else {
