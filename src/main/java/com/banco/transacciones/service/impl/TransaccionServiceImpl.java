@@ -17,6 +17,8 @@ import com.banco.transacciones.model.enums.TipoTransaccion;
 import com.banco.transacciones.repository.CuentaRepository;
 import com.banco.transacciones.repository.TransaccionRepository;
 import com.banco.transacciones.service.TransaccionService;
+import com.banco.transacciones.util.FraudeScoreCalculator;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -40,7 +42,8 @@ public class TransaccionServiceImpl implements TransaccionService {
 
     private static final int TAMANO_SUBLOTE = 50;
     private static final double UMBRAL_FRAUDE = 0.75;
-
+    private final FraudeScoreCalculator fraudeScoreCalculator;
+    
     @Override
     @Async("transaccionExecutor")
     @Transactional
@@ -88,9 +91,8 @@ public class TransaccionServiceImpl implements TransaccionService {
 
         log.debug("Transaccion creada con id: {}", transaccionGuardada.getId());
 
-        // PASO 6 — Calcular score de fraude (por ahora un valor fijo, 
-        //          luego lo implementará FraudeScoreCalculator)
-        double scoreFraude = 0.0;
+        // PASO 6 — Calcular score de fraude 
+        double scoreFraude = fraudeScoreCalculator.calcularScore(transaccionGuardada);
 
         // PASO 7 — Si el score supera 0.75 bloquear la transacción
         if (scoreFraude > UMBRAL_FRAUDE) {
