@@ -33,17 +33,21 @@ class TransaccionControllerTest {
     private static final String CUENTA_ORIGEN_KEY = "cuentaOrigen";
     private static final String CUENTA_DESTINO_KEY = "cuentaDestino";
 
-    @Autowired
-    private MockMvc mockMvc;
+    private final MockMvc mockMvc;
+    private final CuentaRepository cuentaRepository;
+    private final ClienteRepository clienteRepository;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    private CuentaRepository cuentaRepository;
-
-    @Autowired
-    private ClienteRepository clienteRepository;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    public TransaccionControllerTest(MockMvc mockMvc,
+                                     CuentaRepository cuentaRepository,
+                                     ClienteRepository clienteRepository,
+                                     ObjectMapper objectMapper) {
+        this.mockMvc = mockMvc;
+        this.cuentaRepository = cuentaRepository;
+        this.clienteRepository = clienteRepository;
+        this.objectMapper = objectMapper;
+    }
 
     @BeforeEach
     void setUp() {
