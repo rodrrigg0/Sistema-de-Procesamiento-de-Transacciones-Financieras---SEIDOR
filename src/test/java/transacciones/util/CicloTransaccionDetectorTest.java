@@ -34,7 +34,7 @@ class CicloTransaccionDetectorTest {
         List<Transaccion> transacciones = List.of(
             crearTransaccion("ES11", "ES22"),
             crearTransaccion("ES22", "ES33"),
-            crearTransaccion("ES33", "ES11") // ← ciclo
+            crearTransaccion("ES33", "ES11") 
         );
 
         when(transaccionRepository.findByFechaHoraAfter(any()))
