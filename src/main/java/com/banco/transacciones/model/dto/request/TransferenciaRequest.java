@@ -1,7 +1,6 @@
 package com.banco.transacciones.model.dto.request;
 
 import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
