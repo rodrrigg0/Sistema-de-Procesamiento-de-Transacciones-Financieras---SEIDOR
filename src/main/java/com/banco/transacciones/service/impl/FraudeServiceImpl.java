@@ -7,9 +7,9 @@ import com.banco.transacciones.model.entity.AlertaFraude;
 import com.banco.transacciones.model.enums.NivelRiesgo;
 import com.banco.transacciones.repository.AlertaFraudeRepository;
 import com.banco.transacciones.service.FraudeService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
@@ -19,21 +19,29 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class FraudeServiceImpl implements FraudeService {
+
+    private static final String CORRELATION_ID = "correlationId";
 
     private final AlertaFraudeRepository alertaFraudeRepository;
     private final AlertaFraudeMapper alertaFraudeMapper;
+    private final FraudeServiceImpl self;
+
+    public FraudeServiceImpl(AlertaFraudeRepository alertaFraudeRepository,
+                              AlertaFraudeMapper alertaFraudeMapper,
+                              @Lazy FraudeServiceImpl self) {
+        this.alertaFraudeRepository = alertaFraudeRepository;
+        this.alertaFraudeMapper = alertaFraudeMapper;
+        this.self = self;
+    }
 
     @Override
     @Transactional(readOnly = true)
     public Page<AlertaFraudeResponse> obtenerAlertas(Pageable pageable) {
-        MDC.put("correlationId", UUID.randomUUID().toString());
+        MDC.put(CORRELATION_ID, UUID.randomUUID().toString());
         log.info("Obteniendo alertas de fraude no revisadas");
-
         Page<AlertaFraude> alertas = alertaFraudeRepository
                 .findByRevisadaFalseOrderByNivelDescTransaccionIdAsc(pageable);
-
         log.info("Se encontraron {} alertas", alertas.getTotalElements());
         return alertas.map(alertaFraudeMapper::toResponse);
     }
@@ -41,7 +49,7 @@ public class FraudeServiceImpl implements FraudeService {
     @Override
     @Transactional
     public AlertaFraudeResponse revisarAlerta(Long id) {
-        MDC.put("correlationId", UUID.randomUUID().toString());
+        MDC.put(CORRELATION_ID, UUID.randomUUID().toString());
         log.info("Revisando alerta de fraude con id: {}", id);
 
         AlertaFraude alerta = alertaFraudeRepository.findById(id)
@@ -53,7 +61,7 @@ public class FraudeServiceImpl implements FraudeService {
 
         if (alerta.getNivel() == NivelRiesgo.CRITICO) {
             log.warn("Alerta CRITICA revisada, disparando notificacion asincrona");
-            enviarNotificacionAsincrona(alerta);
+            self.enviarNotificacionAsincrona(alerta);
         }
 
         log.info("Alerta {} marcada como revisada", id);

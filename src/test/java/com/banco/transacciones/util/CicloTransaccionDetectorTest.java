@@ -1,10 +1,9 @@
-package transacciones.util;
+package com.banco.transacciones.util;
 
 import com.banco.transacciones.model.entity.Transaccion;
 import com.banco.transacciones.model.enums.EstadoTransaccion;
 import com.banco.transacciones.model.enums.TipoTransaccion;
 import com.banco.transacciones.repository.TransaccionRepository;
-import com.banco.transacciones.util.CicloTransaccionDetector;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
