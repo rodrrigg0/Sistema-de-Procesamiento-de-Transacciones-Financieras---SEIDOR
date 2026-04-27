@@ -28,6 +28,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ActiveProfiles("test")
 class TransaccionControllerTest {
 
+    private static final String CUENTA_ORIGEN_IBAN = "ES1234567890123456789012";
+    private static final String CUENTA_DESTINO_IBAN = "ES9876543210987654321098";
+    private static final String CUENTA_ORIGEN_KEY = "cuentaOrigen";
+    private static final String CUENTA_DESTINO_KEY = "cuentaDestino";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -45,7 +50,6 @@ class TransaccionControllerTest {
         cuentaRepository.deleteAll();
         clienteRepository.deleteAll();
 
-        // Crear clientes primero
         Cliente cliente1 = new Cliente();
         cliente1.setNombre("Cliente Uno");
         cliente1.setDni("12345678A");
@@ -58,9 +62,8 @@ class TransaccionControllerTest {
         cliente2.setEmail("cliente2@test.com");
         cliente2 = clienteRepository.save(cliente2);
 
-        // Crear cuentas con los IDs reales de los clientes
         Cuenta cuentaOrigen = new Cuenta();
-        cuentaOrigen.setNumeroCuenta("ES1234567890123456789012");
+        cuentaOrigen.setNumeroCuenta(CUENTA_ORIGEN_IBAN);
         cuentaOrigen.setSaldo(new BigDecimal("1000.00"));
         cuentaOrigen.setTipoCuenta(TipoCuenta.CORRIENTE);
         cuentaOrigen.setEstadoCuenta(EstadoCuenta.ACTIVA);
@@ -68,7 +71,7 @@ class TransaccionControllerTest {
         cuentaRepository.save(cuentaOrigen);
 
         Cuenta cuentaDestino = new Cuenta();
-        cuentaDestino.setNumeroCuenta("ES9876543210987654321098");
+        cuentaDestino.setNumeroCuenta(CUENTA_DESTINO_IBAN);
         cuentaDestino.setSaldo(new BigDecimal("500.00"));
         cuentaDestino.setTipoCuenta(TipoCuenta.CORRIENTE);
         cuentaDestino.setEstadoCuenta(EstadoCuenta.ACTIVA);
@@ -79,8 +82,8 @@ class TransaccionControllerTest {
     @Test
     void procesarTransferencia_devuelve202_cuandoTodoEsCorrecto() throws Exception {
         Map<String, Object> request = Map.of(
-                "cuentaOrigen", "ES1234567890123456789012",
-                "cuentaDestino", "ES9876543210987654321098",
+                CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
+                CUENTA_DESTINO_KEY, CUENTA_DESTINO_IBAN,
                 "monto", 100.00,
                 "descripcion", "Test transferencia"
         );
@@ -94,8 +97,8 @@ class TransaccionControllerTest {
     @Test
     void procesarTransferencia_devuelve400_cuandoSaldoInsuficiente() throws Exception {
         Map<String, Object> request = Map.of(
-                "cuentaOrigen", "ES1234567890123456789012",
-                "cuentaDestino", "ES9876543210987654321098",
+                CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
+                CUENTA_DESTINO_KEY, CUENTA_DESTINO_IBAN,
                 "monto", 9999.00,
                 "descripcion", "Test saldo insuficiente"
         );
@@ -109,8 +112,8 @@ class TransaccionControllerTest {
     @Test
     void procesarTransferencia_devuelve400_cuandoCuentasIguales() throws Exception {
         Map<String, Object> request = Map.of(
-                "cuentaOrigen", "ES1234567890123456789012",
-                "cuentaDestino", "ES1234567890123456789012",
+                CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
+                CUENTA_DESTINO_KEY, CUENTA_ORIGEN_IBAN,
                 "monto", 100.00,
                 "descripcion", "Test cuentas iguales"
         );
