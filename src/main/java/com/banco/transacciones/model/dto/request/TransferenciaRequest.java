@@ -9,13 +9,11 @@ import java.math.BigDecimal;
 @CuentasDistintas
 public class TransferenciaRequest {
 
-    @NotBlank(message = "La cuenta origen es obligatoria")
-    @Pattern(regexp = "[A-Z]{2}[0-9]{22}", message = "Formato de cuenta inválido")
-    private String cuentaOrigen;
+	@Pattern(regexp = "[A-Z]{2}\\d{22}", message = "Formato de cuenta inválido")
+	private String cuentaOrigen;
 
-    @NotBlank(message = "La cuenta destino es obligatoria")
-    @Pattern(regexp = "[A-Z]{2}[0-9]{22}", message = "Formato de cuenta inválido")
-    private String cuentaDestino;
+	@Pattern(regexp = "[A-Z]{2}\\d{22}", message = "Formato de cuenta inválido")
+	private String cuentaDestino;
 
     @Positive(message = "El monto debe ser positivo")
     @DecimalMax(value = "50000.00", message = "El monto no puede superar 50000€")
