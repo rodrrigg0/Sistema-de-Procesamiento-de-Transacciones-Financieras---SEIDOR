@@ -17,9 +17,12 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
+import com.banco.transacciones.model.entity.Cuenta;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -122,5 +125,79 @@ class FraudeScoreCalculatorTest {
         double score = fraudeScoreCalculator.calcularScore(transaccion);
 
         assertTrue(score >= 0.75);
+    }
+
+    @Test
+    void scorePeso010_cuandoPaisDestinoDistintoAlOrigen() {
+        transaccion.setMonto(new BigDecimal("100"));
+        transaccion.setFechaHora(
+            ZonedDateTime.now(ZoneId.systemDefault()).withHour(12).toInstant());
+
+        Cuenta cuentaDestino = new Cuenta();
+        cuentaDestino.setNumeroCuenta(transaccion.getCuentaDestino());
+        cuentaDestino.setPaisHabitual("GBR");
+
+        Cuenta cuentaOrigen = new Cuenta();
+        cuentaOrigen.setNumeroCuenta(transaccion.getCuentaOrigen());
+        cuentaOrigen.setPaisHabitual("ESP");
+
+        when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
+                anyString(), any())).thenReturn(0L);
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+                .thenReturn(java.util.Optional.of(cuentaDestino));
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+                .thenReturn(java.util.Optional.of(cuentaOrigen));
+
+        double score = fraudeScoreCalculator.calcularScore(transaccion);
+
+        assertEquals(0.10, score, 0.001);
+    }
+
+    @Test
+    void scoreNoCambia_cuandoCuentaDestinoNoTienePaisHabitual() {
+        transaccion.setMonto(new BigDecimal("100"));
+        transaccion.setFechaHora(
+            ZonedDateTime.now(ZoneId.systemDefault()).withHour(12).toInstant());
+
+        Cuenta cuentaDestino = new Cuenta();
+        cuentaDestino.setNumeroCuenta(transaccion.getCuentaDestino());
+        cuentaDestino.setPaisHabitual(null);
+
+        Cuenta cuentaOrigen = new Cuenta();
+        cuentaOrigen.setNumeroCuenta(transaccion.getCuentaOrigen());
+        cuentaOrigen.setPaisHabitual("ESP");
+
+        when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
+                anyString(), any())).thenReturn(0L);
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+                .thenReturn(java.util.Optional.of(cuentaDestino));
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+                .thenReturn(java.util.Optional.of(cuentaOrigen));
+
+        double score = fraudeScoreCalculator.calcularScore(transaccion);
+
+        assertEquals(0.0, score, 0.001);
+    }
+
+    @Test
+    void scoreNoCambia_cuandoCuentaOrigenNoExisteEnRepositorio() {
+        transaccion.setMonto(new BigDecimal("100"));
+        transaccion.setFechaHora(
+            ZonedDateTime.now(ZoneId.systemDefault()).withHour(12).toInstant());
+
+        Cuenta cuentaDestino = new Cuenta();
+        cuentaDestino.setNumeroCuenta(transaccion.getCuentaDestino());
+        cuentaDestino.setPaisHabitual("GBR");
+
+        when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
+                anyString(), any())).thenReturn(0L);
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+                .thenReturn(java.util.Optional.of(cuentaDestino));
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+                .thenReturn(java.util.Optional.empty());
+
+        double score = fraudeScoreCalculator.calcularScore(transaccion);
+
+        assertEquals(0.0, score, 0.001);
     }
 }

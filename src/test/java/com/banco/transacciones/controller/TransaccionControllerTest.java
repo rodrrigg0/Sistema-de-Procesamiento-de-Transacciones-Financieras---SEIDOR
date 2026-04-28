@@ -1,9 +1,11 @@
 package com.banco.transacciones.controller;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +37,9 @@ class TransaccionControllerTest {
     private static final String MONTO_KEY = "monto";
     private static final String DESCRIPCION_KEY = "descripcion";
     private static final String URL_TRANSFERENCIA = "/api/transacciones/transferencia";
+    private static final String URL_ESTADO = "/api/transacciones/{id}/estado";
+    private static final String URL_LOTE = "/api/transacciones/lote";
+    private static final long ID_INEXISTENTE = 999999L;
 
     private final MockMvc mockMvc;
     private final CuentaRepository cuentaRepository;
@@ -129,5 +134,52 @@ class TransaccionControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void consultarEstadoDevuelve200CuandoTransaccionExiste() throws Exception {
+        Map<String, Object> transferRequest = Map.of(
+                CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
+                CUENTA_DESTINO_KEY, CUENTA_DESTINO_IBAN,
+                MONTO_KEY, 50.00,
+                DESCRIPCION_KEY, "Test estado"
+        );
+
+        String responseBody = mockMvc.perform(post(URL_TRANSFERENCIA)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(transferRequest)))
+                .andExpect(status().isAccepted())
+                .andReturn().getResponse().getContentAsString();
+
+        Long transaccionId = objectMapper.readTree(responseBody).get("transaccionId").asLong();
+
+        mockMvc.perform(get(URL_ESTADO, transaccionId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(transaccionId))
+                .andExpect(jsonPath("$.cuentaOrigen").value(CUENTA_ORIGEN_IBAN));
+    }
+
+    @Test
+    void consultarEstadoDevuelve404CuandoTransaccionNoExiste() throws Exception {
+        mockMvc.perform(get(URL_ESTADO, ID_INEXISTENTE))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void procesarLoteDevuelve200ConUnaTransaccionExitosa() throws Exception {
+        Map<String, Object> transaccion = Map.of(
+                CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
+                CUENTA_DESTINO_KEY, CUENTA_DESTINO_IBAN,
+                MONTO_KEY, 50.00,
+                DESCRIPCION_KEY, "Trans lote"
+        );
+        Map<String, Object> loteRequest = Map.of("transacciones", List.of(transaccion));
+
+        mockMvc.perform(post(URL_LOTE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loteRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalRecibidas").value(1))
+                .andExpect(jsonPath("$.totalProcesadas").exists());
     }
 }
