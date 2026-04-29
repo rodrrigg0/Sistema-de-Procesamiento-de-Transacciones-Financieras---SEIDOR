@@ -14,6 +14,7 @@ import com.banco.transacciones.model.entity.Transaccion;
 import com.banco.transacciones.model.enums.EstadoCuenta;
 import com.banco.transacciones.model.enums.EstadoTransaccion;
 import com.banco.transacciones.model.enums.TipoTransaccion;
+import com.banco.transacciones.repository.AlertaFraudeRepository;
 import com.banco.transacciones.repository.CuentaRepository;
 import com.banco.transacciones.repository.TransaccionRepository;
 import com.banco.transacciones.service.TransaccionService;
@@ -55,6 +56,9 @@ class TransaccionServiceImplTest {
 
     @Mock
     private FraudeScoreCalculator fraudeScoreCalculator;
+
+    @Mock
+    private AlertaFraudeRepository alertaFraudeRepository;
 
     @Mock
     private TransaccionService self;

@@ -9,11 +9,14 @@ import com.banco.transacciones.model.dto.request.TransferenciaRequest;
 import com.banco.transacciones.model.dto.response.LoteResultadoResponse;
 import com.banco.transacciones.model.dto.response.SeguimientoResponse;
 import com.banco.transacciones.model.dto.response.TransaccionResponse;
+import com.banco.transacciones.model.entity.AlertaFraude;
 import com.banco.transacciones.model.entity.Cuenta;
 import com.banco.transacciones.model.entity.Transaccion;
 import com.banco.transacciones.model.enums.EstadoCuenta;
 import com.banco.transacciones.model.enums.EstadoTransaccion;
+import com.banco.transacciones.model.enums.NivelRiesgo;
 import com.banco.transacciones.model.enums.TipoTransaccion;
+import com.banco.transacciones.repository.AlertaFraudeRepository;
 import com.banco.transacciones.repository.CuentaRepository;
 import com.banco.transacciones.repository.TransaccionRepository;
 import com.banco.transacciones.service.TransaccionService;
@@ -39,17 +42,20 @@ public class TransaccionServiceImpl implements TransaccionService {
     private final TransaccionRepository transaccionRepository;
     private final TransaccionMapper transaccionMapper;
     private final FraudeScoreCalculator fraudeScoreCalculator;
+    private final AlertaFraudeRepository alertaFraudeRepository;
     private final TransaccionService self;
 
     public TransaccionServiceImpl(CuentaRepository cuentaRepository,
                                    TransaccionRepository transaccionRepository,
                                    TransaccionMapper transaccionMapper,
                                    FraudeScoreCalculator fraudeScoreCalculator,
+                                   AlertaFraudeRepository alertaFraudeRepository,
                                    @Lazy TransaccionService self) {
         this.cuentaRepository = cuentaRepository;
         this.transaccionRepository = transaccionRepository;
         this.transaccionMapper = transaccionMapper;
         this.fraudeScoreCalculator = fraudeScoreCalculator;
+        this.alertaFraudeRepository = alertaFraudeRepository;
         this.self = self;
     }
 
@@ -106,6 +112,12 @@ public class TransaccionServiceImpl implements TransaccionService {
         if (scoreFraude > UMBRAL_FRAUDE) {
             transaccionGuardada.setEstado(EstadoTransaccion.RECHAZADA);
             transaccionRepository.save(transaccionGuardada);
+            AlertaFraude alerta = new AlertaFraude();
+            alerta.setTransaccionId(transaccionGuardada.getId());
+            alerta.setNivel(calcularNivel(scoreFraude));
+            alerta.setMotivo("Score de fraude: " + scoreFraude);
+            alerta.setRevisada(false);
+            alertaFraudeRepository.save(alerta);
             log.warn("Transaccion {} rechazada por riesgo de fraude. Score: {}",
                     transaccionGuardada.getId(), scoreFraude);
             return new SeguimientoResponse(
@@ -187,6 +199,13 @@ public class TransaccionServiceImpl implements TransaccionService {
                 totalRechazadas,
                 resultados
         );
+    }
+
+    private NivelRiesgo calcularNivel(double score) {
+        if (score >= 0.90) return NivelRiesgo.CRITICO;
+        if (score >= 0.75) return NivelRiesgo.ALTO;
+        if (score >= 0.50) return NivelRiesgo.MEDIO;
+        return NivelRiesgo.BAJO;
     }
 
     private <T> List<List<T>> partirEnSublotes(List<T> lista, int tamano) {

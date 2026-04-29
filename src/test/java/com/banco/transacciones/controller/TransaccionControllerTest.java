@@ -1,5 +1,6 @@
 package com.banco.transacciones.controller;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -19,10 +20,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.banco.transacciones.model.entity.Cliente;
 import com.banco.transacciones.model.entity.Cuenta;
+import com.banco.transacciones.model.entity.Transaccion;
 import com.banco.transacciones.model.enums.EstadoCuenta;
+import com.banco.transacciones.model.enums.EstadoTransaccion;
 import com.banco.transacciones.model.enums.TipoCuenta;
+import com.banco.transacciones.model.enums.TipoTransaccion;
+import com.banco.transacciones.repository.AlertaFraudeRepository;
 import com.banco.transacciones.repository.ClienteRepository;
 import com.banco.transacciones.repository.CuentaRepository;
+import com.banco.transacciones.repository.TransaccionRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
@@ -44,21 +50,29 @@ class TransaccionControllerTest {
     private final MockMvc mockMvc;
     private final CuentaRepository cuentaRepository;
     private final ClienteRepository clienteRepository;
+    private final TransaccionRepository transaccionRepository;
+    private final AlertaFraudeRepository alertaFraudeRepository;
     private final ObjectMapper objectMapper;
 
     @Autowired
     public TransaccionControllerTest(MockMvc mockMvc,
                                      CuentaRepository cuentaRepository,
                                      ClienteRepository clienteRepository,
+                                     TransaccionRepository transaccionRepository,
+                                     AlertaFraudeRepository alertaFraudeRepository,
                                      ObjectMapper objectMapper) {
         this.mockMvc = mockMvc;
         this.cuentaRepository = cuentaRepository;
         this.clienteRepository = clienteRepository;
+        this.transaccionRepository = transaccionRepository;
+        this.alertaFraudeRepository = alertaFraudeRepository;
         this.objectMapper = objectMapper;
     }
 
     @BeforeEach
     void setUp() {
+        alertaFraudeRepository.deleteAll();
+        transaccionRepository.deleteAll();
         cuentaRepository.deleteAll();
         clienteRepository.deleteAll();
 
@@ -80,6 +94,7 @@ class TransaccionControllerTest {
         cuentaOrigen.setTipoCuenta(TipoCuenta.CORRIENTE);
         cuentaOrigen.setEstadoCuenta(EstadoCuenta.ACTIVA);
         cuentaOrigen.setClienteId(cliente1.getId());
+        cuentaOrigen.setPaisHabitual("ESP");
         cuentaRepository.save(cuentaOrigen);
 
         Cuenta cuentaDestino = new Cuenta();
@@ -88,6 +103,7 @@ class TransaccionControllerTest {
         cuentaDestino.setTipoCuenta(TipoCuenta.CORRIENTE);
         cuentaDestino.setEstadoCuenta(EstadoCuenta.ACTIVA);
         cuentaDestino.setClienteId(cliente2.getId());
+        cuentaDestino.setPaisHabitual("GBR");
         cuentaRepository.save(cuentaDestino);
     }
 
@@ -181,5 +197,41 @@ class TransaccionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalRecibidas").value(1))
                 .andExpect(jsonPath("$.totalProcesadas").exists());
+    }
+
+    @Test
+    void transferenciaRechazadaGeneraAlertaDeFraude() throws Exception {
+        // Subir saldo para que no falle por saldo insuficiente antes de llegar al score
+        Cuenta cuentaConSaldo = cuentaRepository.findByNumeroCuenta(CUENTA_ORIGEN_IBAN).orElseThrow();
+        cuentaConSaldo.setSaldo(new BigDecimal("20000.00"));
+        cuentaRepository.save(cuentaConSaldo);
+
+        // Insertar 4 transacciones recientes para activar Indicador 3 (frecuencia > 3)
+        for (int i = 0; i < 4; i++) {
+            Transaccion t = new Transaccion();
+            t.setCuentaOrigen(CUENTA_ORIGEN_IBAN);
+            t.setCuentaDestino(CUENTA_DESTINO_IBAN);
+            t.setMonto(new BigDecimal("10.00"));
+            t.setTipo(TipoTransaccion.TRANSFERENCIA);
+            t.setEstado(EstadoTransaccion.COMPLETADA);
+            t.setDescripcion("Pre-test frecuencia");
+            transaccionRepository.save(t);
+        }
+
+        // monto > 10000 (0.30) + frecuencia > 3 (0.25) + cuenta destino nueva (0.15) + pais distinto (0.10) = 0.80
+        Map<String, Object> request = Map.of(
+                CUENTA_ORIGEN_KEY, CUENTA_ORIGEN_IBAN,
+                CUENTA_DESTINO_KEY, CUENTA_DESTINO_IBAN,
+                MONTO_KEY, 15000.00,
+                DESCRIPCION_KEY, "Test alerta fraude"
+        );
+
+        mockMvc.perform(post(URL_TRANSFERENCIA)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.estado").value("RECHAZADA"));
+
+        assertTrue(alertaFraudeRepository.count() >= 1);
     }
 }
