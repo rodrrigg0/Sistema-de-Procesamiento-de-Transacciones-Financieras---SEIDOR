@@ -1,6 +1,7 @@
 package com.banco.transacciones.model.entity;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.banco.transacciones.model.enums.EstadoCuenta;
@@ -17,6 +18,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Data;
 
@@ -56,9 +58,17 @@ public class Cuenta {
 	
 	@Column(name = "score_riesgo", precision = 5, scale = 4)
 	private BigDecimal scoreRiesgo;
-	
+
+	@Column(name = "fecha_creacion", updatable = false)
+	private LocalDateTime fechaCreacion;
+
 	@OneToMany(mappedBy = "cuentaOrigen")
 	private List<Transaccion> transacciones;
+
+	@PrePersist
+	protected void onCreate() {
+		fechaCreacion = LocalDateTime.now();
+	}
 	
 	
 	

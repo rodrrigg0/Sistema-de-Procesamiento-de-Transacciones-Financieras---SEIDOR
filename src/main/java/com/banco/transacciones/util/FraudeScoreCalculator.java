@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -63,9 +64,12 @@ public class FraudeScoreCalculator {
         Optional<Cuenta> cuentaDestino = cuentaRepository
                 .findByNumeroCuenta(transaccion.getCuentaDestino());
         if (cuentaDestino.isPresent()) {
-            // Como no tenemos fechaCreacion en Cuenta, usamos el id como aproximación
-            // En un sistema real usaríamos la fecha de creación de la cuenta
-            log.debug("Cuenta destino encontrada");
+            LocalDateTime umbralNueva = LocalDateTime.now().minus(7, ChronoUnit.DAYS);
+            if (cuentaDestino.get().getFechaCreacion() != null &&
+                    cuentaDestino.get().getFechaCreacion().isAfter(umbralNueva)) {
+                score += PESO_CUENTA_NUEVA;
+                log.debug("Indicador cuenta nueva activado. Score parcial: {}", score);
+            }
         }
 
         // Indicador 5 — país destino distinto al habitual

@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -173,6 +174,50 @@ class FraudeScoreCalculatorTest {
                 .thenReturn(java.util.Optional.of(cuentaDestino));
         when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
                 .thenReturn(java.util.Optional.of(cuentaOrigen));
+
+        double score = fraudeScoreCalculator.calcularScore(transaccion);
+
+        assertEquals(0.0, score, 0.001);
+    }
+
+    @Test
+    void scorePeso015_cuandoCuentaDestinoEsNueva() {
+        transaccion.setMonto(new BigDecimal("100"));
+        transaccion.setFechaHora(
+            ZonedDateTime.now(ZoneId.systemDefault()).withHour(12).toInstant());
+
+        Cuenta cuentaDestino = new Cuenta();
+        cuentaDestino.setNumeroCuenta(transaccion.getCuentaDestino());
+        cuentaDestino.setFechaCreacion(LocalDateTime.now());
+
+        when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
+                anyString(), any())).thenReturn(0L);
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+                .thenReturn(java.util.Optional.of(cuentaDestino));
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+                .thenReturn(java.util.Optional.empty());
+
+        double score = fraudeScoreCalculator.calcularScore(transaccion);
+
+        assertEquals(0.15, score, 0.001);
+    }
+
+    @Test
+    void scoreNoCambia_cuandoCuentaDestinoEsAntigua() {
+        transaccion.setMonto(new BigDecimal("100"));
+        transaccion.setFechaHora(
+            ZonedDateTime.now(ZoneId.systemDefault()).withHour(12).toInstant());
+
+        Cuenta cuentaDestino = new Cuenta();
+        cuentaDestino.setNumeroCuenta(transaccion.getCuentaDestino());
+        cuentaDestino.setFechaCreacion(LocalDateTime.now().minusDays(30));
+
+        when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
+                anyString(), any())).thenReturn(0L);
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+                .thenReturn(java.util.Optional.of(cuentaDestino));
+        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+                .thenReturn(java.util.Optional.empty());
 
         double score = fraudeScoreCalculator.calcularScore(transaccion);
 
