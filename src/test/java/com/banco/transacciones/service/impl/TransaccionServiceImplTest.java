@@ -101,9 +101,9 @@ class TransaccionServiceImplTest {
         when(cuentaRepository.findByNumeroCuentaWithLock(CUENTA_ORIGEN))
                 .thenReturn(Optional.empty());
 
+        TransferenciaRequest req = crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "100.00");
         assertThrows(TransaccionNotFoundException.class,
-                () -> transaccionService.procesarTransferencia(
-                        crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "100.00")));
+                () -> transaccionService.procesarTransferencia(req));
     }
 
     @Test
@@ -112,9 +112,9 @@ class TransaccionServiceImplTest {
         when(cuentaRepository.findByNumeroCuentaWithLock(CUENTA_ORIGEN))
                 .thenReturn(Optional.of(bloqueada));
 
+        TransferenciaRequest req = crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "100.00");
         assertThrows(CuentaBloqueadaException.class,
-                () -> transaccionService.procesarTransferencia(
-                        crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "100.00")));
+                () -> transaccionService.procesarTransferencia(req));
     }
 
     @Test
@@ -123,9 +123,9 @@ class TransaccionServiceImplTest {
         when(cuentaRepository.findByNumeroCuentaWithLock(CUENTA_ORIGEN))
                 .thenReturn(Optional.of(cerrada));
 
+        TransferenciaRequest req = crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "100.00");
         assertThrows(CuentaBloqueadaException.class,
-                () -> transaccionService.procesarTransferencia(
-                        crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "100.00")));
+                () -> transaccionService.procesarTransferencia(req));
     }
 
     @Test
@@ -134,9 +134,9 @@ class TransaccionServiceImplTest {
         when(cuentaRepository.findByNumeroCuentaWithLock(CUENTA_ORIGEN))
                 .thenReturn(Optional.of(activa));
 
+        TransferenciaRequest req = crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "200.00");
         assertThrows(SaldoInsuficienteException.class,
-                () -> transaccionService.procesarTransferencia(
-                        crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "200.00")));
+                () -> transaccionService.procesarTransferencia(req));
     }
 
     @Test
@@ -147,9 +147,9 @@ class TransaccionServiceImplTest {
         when(cuentaRepository.findByNumeroCuenta(CUENTA_DESTINO))
                 .thenReturn(Optional.empty());
 
+        TransferenciaRequest req = crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "100.00");
         assertThrows(TransaccionNotFoundException.class,
-                () -> transaccionService.procesarTransferencia(
-                        crearRequest(CUENTA_ORIGEN, CUENTA_DESTINO, "100.00")));
+                () -> transaccionService.procesarTransferencia(req));
     }
 
     @Test

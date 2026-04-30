@@ -23,7 +23,6 @@ import com.banco.transacciones.model.entity.Cuenta;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -144,9 +143,9 @@ class FraudeScoreCalculatorTest {
 
         when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
                 anyString(), any())).thenReturn(0L);
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaDestino()))
                 .thenReturn(java.util.Optional.of(cuentaDestino));
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaOrigen()))
                 .thenReturn(java.util.Optional.of(cuentaOrigen));
 
         double score = fraudeScoreCalculator.calcularScore(transaccion);
@@ -170,9 +169,9 @@ class FraudeScoreCalculatorTest {
 
         when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
                 anyString(), any())).thenReturn(0L);
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaDestino()))
                 .thenReturn(java.util.Optional.of(cuentaDestino));
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaOrigen()))
                 .thenReturn(java.util.Optional.of(cuentaOrigen));
 
         double score = fraudeScoreCalculator.calcularScore(transaccion);
@@ -192,9 +191,9 @@ class FraudeScoreCalculatorTest {
 
         when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
                 anyString(), any())).thenReturn(0L);
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaDestino()))
                 .thenReturn(java.util.Optional.of(cuentaDestino));
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaOrigen()))
                 .thenReturn(java.util.Optional.empty());
 
         double score = fraudeScoreCalculator.calcularScore(transaccion);
@@ -214,9 +213,9 @@ class FraudeScoreCalculatorTest {
 
         when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
                 anyString(), any())).thenReturn(0L);
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaDestino()))
                 .thenReturn(java.util.Optional.of(cuentaDestino));
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaOrigen()))
                 .thenReturn(java.util.Optional.empty());
 
         double score = fraudeScoreCalculator.calcularScore(transaccion);
@@ -236,9 +235,9 @@ class FraudeScoreCalculatorTest {
 
         when(transaccionRepository.countByCuentaOrigenAndFechaHoraAfter(
                 anyString(), any())).thenReturn(0L);
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaDestino())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaDestino()))
                 .thenReturn(java.util.Optional.of(cuentaDestino));
-        when(cuentaRepository.findByNumeroCuenta(eq(transaccion.getCuentaOrigen())))
+        when(cuentaRepository.findByNumeroCuenta(transaccion.getCuentaOrigen()))
                 .thenReturn(java.util.Optional.empty());
 
         double score = fraudeScoreCalculator.calcularScore(transaccion);
